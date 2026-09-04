@@ -76,3 +76,33 @@ This project was built without access to a cloud provider account. Rather than s
 
 \- Unit tests for the transform logic
 
+
+
+---
+
+## Second Pipeline: Live Crypto Price Tracker
+
+A second, independent pipeline demonstrating a different data pattern — JSON API extraction and scheduled execution.
+
+### What it does
+
+1. **Extract** — Pulls live price data (USD/EUR, market cap, 24h change) for Bitcoin, Ethereum, Solana, and Dogecoin from the CoinGecko public API.
+2. **Transform** — Flattens the nested JSON response into a tabular format using pandas.
+3. **Load** — Appends each run's snapshot into PostgreSQL, building a running price history over time (rather than overwriting).
+
+### How this differs from the first pipeline
+
+| | First pipeline (`first_etl_pipeline`) | Second pipeline (`crypto_price_pipeline`) |
+|---|---|---|
+| Source | Static CSV file | Live JSON API |
+| Schedule | Manual trigger only | Runs automatically every hour |
+| Load pattern | Replace (truncate + reload) | Append (builds historical record) |
+| Data shape | Already tabular | Nested JSON, requires flattening |
+
+### How to run it
+
+Runs automatically once the DAG is enabled in Airflow. To trigger manually and verify:
+```
+docker exec -it data-postgres psql -U data -d pipeline_data -c "SELECT * FROM crypto_prices;"
+```
+
